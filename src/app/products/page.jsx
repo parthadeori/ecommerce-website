@@ -10,8 +10,13 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("");
   const [category, setCategory] = useState("All");
+  const [view, setView] = useState("grid"); // "grid" or "list"
 
-  // Fetch all products from API
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 8;
+
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -29,7 +34,7 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
-  // Filter and sort logic
+  // Filter + Sort
   useEffect(() => {
     let updated = [...products];
 
@@ -46,10 +51,21 @@ const ProductsPage = () => {
     }
 
     setFiltered(updated);
+    setCurrentPage(1); // reset pagination on filter/sort change
   }, [sort, category, products]);
 
   if (loading)
     return <p className="text-center text-gray-500">Loading products...</p>;
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filtered.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = filtered.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
 
   return (
     <main className="py-16 px-4 max-w-7xl mx-auto">
@@ -78,16 +94,68 @@ const ProductsPage = () => {
         </select>
       </div>
 
+      {/* View Toggle */}
+      <div className="flex justify-end gap-2 mb-4">
+        <button
+          onClick={() => setView("grid")}
+          className={`px-3 py-1 rounded border ${
+            view === "grid" ? "bg-indigo-600 text-white" : "bg-white"
+          }`}
+        >
+          🟦 Grid
+        </button>
+        <button
+          onClick={() => setView("list")}
+          className={`px-3 py-1 rounded border ${
+            view === "list" ? "bg-indigo-600 text-white" : "bg-white"
+          }`}
+        >
+          📄 List
+        </button>
+      </div>
+
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filtered.length > 0 ? (
-          filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
+      <div
+        className={
+          view === "grid"
+            ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+            : "flex flex-col gap-4"
+        }
+      >
+        {currentProducts.length > 0 ? (
+          currentProducts.map((product) => (
+            // ✅ Pass view as prop
+            <ProductCard key={product.id} product={product} view={view} />
           ))
         ) : (
           <p className="text-center text-gray-500">No products found.</p>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-10">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          <span className="text-lg font-semibold">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </main>
   );
 };
