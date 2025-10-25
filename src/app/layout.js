@@ -1,6 +1,8 @@
 import "./globals.css";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CompareProvider } from "@/context/CompareContext";
+import { CartProvider } from "@/context/CartContext";
+import { ReviewsProvider } from "@/context/ReviewsContext";
 
 export const metadata = {
   title: "E-Commerce App",
@@ -12,7 +14,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <WishlistProvider>
-          <CompareProvider>{children}</CompareProvider>
+          <CompareProvider>
+            <CartProvider>
+              <ReviewsProvider>{children}</ReviewsProvider>
+            </CartProvider>
+          </CompareProvider>
         </WishlistProvider>
       </body>
     </html>
